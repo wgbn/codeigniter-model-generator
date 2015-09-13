@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="dataSourceStorage">
+  <data-source name="reservas" uuid="bf50d9c3-f9b2-49d2-9bc4-5fd3922c2a66">
+    <database-info product="MySQL" version="5.6.25-0ubuntu0.15.04.1" jdbc-version="4.0" driver-name="MySQL Connector Java" driver-version="mysql-connector-java-5.1.35 ( Revision: 5fb9c5849535c13917c2cf9baaece6ef9693ef27 )">
+      <extra-name-characters>#@</extra-name-characters>
+      <identifier-quote-string>`</identifier-quote-string>
+    </database-info>
+    <case-sensitivity plain-identifiers="exact" quoted-identifiers="exact"/>
+    <schema name="" catalog="reservasModel"/>
+    <table name="afiliado" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="afiliado" sqlType="VARCHAR" precision="100" scale="0" nullable="false" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <exported-key name="fk_usuario_afiliado1" table="usuario" schema="" catalog="reservasModel" columns="afiliado_id"/>
+    </table>
+    <table name="agendamento" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="registro" sqlType="TIMESTAMP" precision="19" scale="0" nullable="false" jdbcType="93" def="Q1VSUkVOVF9USU1FU1RBTVA=" version="true"/>
+      <column name="data" sqlType="DATETIME" precision="19" scale="0" nullable="false" jdbcType="93"/>
+      <column name="compareceu" sqlType="BIT" precision="1" scale="0" nullable="false" jdbcType="-7" def="YicwJw=="/>
+      <column name="cliente_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <index name="fk_agendamento_cliente1_idx" unique="false" columns="cliente_id"/>
+    </table>
+    <table name="cliente" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="nome" sqlType="VARCHAR" precision="150" scale="0" nullable="false" jdbcType="12"/>
+      <column name="email" sqlType="VARCHAR" precision="150" scale="0" nullable="true" jdbcType="12"/>
+      <column name="peso" sqlType="FLOAT" precision="12" scale="0" nullable="true" jdbcType="7"/>
+      <column name="altura" sqlType="FLOAT" precision="12" scale="0" nullable="true" jdbcType="7"/>
+      <column name="nascimento" sqlType="DATE" precision="10" scale="0" nullable="true" jdbcType="91"/>
+      <column name="transporte" sqlType="BIT" precision="1" scale="0" nullable="false" jdbcType="-7" def="YicwJw=="/>
+      <column name="registro" sqlType="TIMESTAMP" precision="19" scale="0" nullable="false" jdbcType="93" def="Q1VSUkVOVF9USU1FU1RBTVA=" version="true"/>
+      <column name="convenio_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="origem_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="situacao_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="indicacao_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="retorno_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <foreign-key name="fk_cliente_convenio1" columns="convenio_id" ref-table="convenio" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_cliente_indicacao1" columns="indicacao_id" ref-table="indicacao" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_cliente_origem1" columns="origem_id" ref-table="origem" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_cliente_retorno1" columns="retorno_id" ref-table="retorno" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_cliente_situacao1" columns="situacao_id" ref-table="situacao" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <exported-key name="fk_cliente_has_usuario_cliente1" table="cliente_usuario" schema="" catalog="reservasModel" columns="cliente_id"/>
+      <exported-key name="fk_log_cliente1" table="log" schema="" catalog="reservasModel" columns="cliente_id"/>
+      <exported-key name="fk_observacao_cliente1" table="observacao" schema="" catalog="reservasModel" columns="cliente_id"/>
+      <exported-key name="fk_processo_cliente1" table="processo" schema="" catalog="reservasModel" columns="cliente_id"/>
+      <exported-key name="fk_telefone_cliente" table="telefone" schema="" catalog="reservasModel" columns="cliente_id"/>
+      <index name="email_UNIQUE" unique="true" columns="email"/>
+      <index name="fk_cliente_convenio1_idx" unique="false" columns="convenio_id"/>
+      <index name="fk_cliente_indicacao1_idx" unique="false" columns="indicacao_id"/>
+      <index name="fk_cliente_origem1_idx" unique="false" columns="origem_id"/>
+      <index name="fk_cliente_retorno1_idx" unique="false" columns="retorno_id"/>
+      <index name="fk_cliente_situacao1_idx" unique="false" columns="situacao_id"/>
+    </table>
+    <table name="cliente_usuario" schema="" catalog="reservasModel" type="TABLE">
+      <column name="cliente_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="usuario_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="inicial" sqlType="BIT" precision="1" scale="0" nullable="false" jdbcType="-7" def="YicwJw=="/>
+      <column name="preparador" sqlType="BIT" precision="1" scale="0" nullable="false" jdbcType="-7" def="YicwJw=="/>
+      <primary-key name="PRIMARY" columns="cliente_id,usuario_id"/>
+      <foreign-key name="fk_cliente_has_usuario_cliente1" columns="cliente_id" ref-table="cliente" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_cliente_has_usuario_usuario1" columns="usuario_id" ref-table="usuario" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <index name="fk_cliente_has_usuario_cliente1_idx" unique="false" columns="cliente_id"/>
+      <index name="fk_cliente_has_usuario_usuario1_idx" unique="false" columns="usuario_id"/>
+    </table>
+    <table name="convenio" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="convenio" sqlType="VARCHAR" precision="100" scale="0" nullable="false" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <exported-key name="fk_cliente_convenio1" table="cliente" schema="" catalog="reservasModel" columns="convenio_id"/>
+    </table>
+    <table name="imc" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="imc_inicial" sqlType="FLOAT" precision="12" scale="0" nullable="false" jdbcType="7"/>
+      <column name="imc_final" sqlType="FLOAT" precision="12" scale="0" nullable="false" jdbcType="7"/>
+      <column name="categoria" sqlType="VARCHAR" precision="100" scale="0" nullable="false" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="id"/>
+    </table>
+    <table name="indicacao" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="indicacao" sqlType="VARCHAR" precision="100" scale="0" nullable="false" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <exported-key name="fk_cliente_indicacao1" table="cliente" schema="" catalog="reservasModel" columns="indicacao_id"/>
+      <index name="indicacao_UNIQUE" unique="true" columns="indicacao"/>
+    </table>
+    <table name="log" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="registro" sqlType="TIMESTAMP" precision="19" scale="0" nullable="false" jdbcType="93" def="Q1VSUkVOVF9USU1FU1RBTVA=" version="true"/>
+      <column name="descricao" sqlType="VARCHAR" precision="200" scale="0" nullable="false" jdbcType="12"/>
+      <column name="usuario_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="cliente_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <foreign-key name="fk_log_cliente1" columns="cliente_id" ref-table="cliente" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_log_usuario1" columns="usuario_id" ref-table="usuario" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <index name="fk_log_cliente1_idx" unique="false" columns="cliente_id"/>
+      <index name="fk_log_usuario1_idx" unique="false" columns="usuario_id"/>
+    </table>
+    <table name="observacao" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="observacao" sqlType="VARCHAR" precision="300" scale="0" nullable="false" jdbcType="12"/>
+      <column name="cliente_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="usuario_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="registro" sqlType="TIMESTAMP" precision="19" scale="0" nullable="false" jdbcType="93" def="Q1VSUkVOVF9USU1FU1RBTVA=" version="true"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <foreign-key name="fk_observacao_cliente1" columns="cliente_id" ref-table="cliente" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_observacao_usuario1" columns="usuario_id" ref-table="usuario" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <index name="fk_observacao_cliente1_idx" unique="false" columns="cliente_id"/>
+      <index name="fk_observacao_usuario1_idx" unique="false" columns="usuario_id"/>
+    </table>
+    <table name="origem" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="origem" sqlType="VARCHAR" precision="60" scale="0" nullable="false" jdbcType="12"/>
+      <column name="descricao" sqlType="VARCHAR" precision="254" scale="0" nullable="true" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <exported-key name="fk_cliente_origem1" table="cliente" schema="" catalog="reservasModel" columns="origem_id"/>
+    </table>
+    <table name="processo" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="codigo" sqlType="VARCHAR" precision="45" scale="0" nullable="false" jdbcType="12"/>
+      <column name="descricao" sqlType="VARCHAR" precision="500" scale="0" nullable="true" jdbcType="12"/>
+      <column name="cliente_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <foreign-key name="fk_processo_cliente1" columns="cliente_id" ref-table="cliente" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <index name="codigo_UNIQUE" unique="true" columns="codigo"/>
+      <index name="fk_processo_cliente1_idx" unique="false" columns="cliente_id"/>
+    </table>
+    <table name="retorno" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="retorno" sqlType="VARCHAR" precision="45" scale="0" nullable="false" jdbcType="12"/>
+      <column name="descricao" sqlType="VARCHAR" precision="300" scale="0" nullable="true" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <exported-key name="fk_cliente_retorno1" table="cliente" schema="" catalog="reservasModel" columns="retorno_id"/>
+    </table>
+    <table name="situacao" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="situacao" sqlType="VARCHAR" precision="100" scale="0" nullable="false" jdbcType="12"/>
+      <column name="cor" sqlType="VARCHAR" precision="8" scale="0" nullable="false" jdbcType="12" def="JyNGRkZGRkYn"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <exported-key name="fk_cliente_situacao1" table="cliente" schema="" catalog="reservasModel" columns="situacao_id"/>
+    </table>
+    <table name="telefone" schema="" catalog="reservasModel" type="TABLE">
+      <column name="telefone" sqlType="VARCHAR" precision="16" scale="0" nullable="false" jdbcType="12"/>
+      <column name="cliente_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <foreign-key name="fk_telefone_cliente" columns="cliente_id" ref-table="cliente" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <index name="telefone_UNIQUE" unique="true" columns="telefone"/>
+      <index name="fk_telefone_cliente_idx" unique="false" columns="cliente_id"/>
+    </table>
+    <table name="usuario" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="nome" sqlType="VARCHAR" precision="100" scale="0" nullable="false" jdbcType="12"/>
+      <column name="email" sqlType="VARCHAR" precision="150" scale="0" nullable="false" jdbcType="12"/>
+      <column name="senha" sqlType="VARCHAR" precision="128" scale="0" nullable="false" jdbcType="12"/>
+      <column name="usuario_regras_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="afiliado_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="registro" sqlType="TIMESTAMP" precision="19" scale="0" nullable="false" jdbcType="93" def="Q1VSUkVOVF9USU1FU1RBTVA=" version="true"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <foreign-key name="fk_usuario_afiliado1" columns="afiliado_id" ref-table="afiliado" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_usuario_usuario_regras1" columns="usuario_regras_id" ref-table="usuario_regras" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <exported-key name="fk_cliente_has_usuario_usuario1" table="cliente_usuario" schema="" catalog="reservasModel" columns="usuario_id"/>
+      <exported-key name="fk_log_usuario1" table="log" schema="" catalog="reservasModel" columns="usuario_id"/>
+      <exported-key name="fk_observacao_usuario1" table="observacao" schema="" catalog="reservasModel" columns="usuario_id"/>
+      <index name="fk_usuario_afiliado1_idx" unique="false" columns="afiliado_id"/>
+      <index name="fk_usuario_usuario_regras1_idx" unique="false" columns="usuario_regras_id"/>
+    </table>
+    <table name="usuario_acesso" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="acesso" sqlType="VARCHAR" precision="45" scale="0" nullable="false" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <exported-key name="fk_usuario_acesso_has_usuario_regras_usuario_acesso1" table="usuario_acesso_regras" schema="" catalog="reservasModel" columns="usuario_acesso_id"/>
+    </table>
+    <table name="usuario_acesso_regras" schema="" catalog="reservasModel" type="TABLE">
+      <column name="usuario_acesso_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="usuario_regras_id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <primary-key name="PRIMARY" columns="usuario_acesso_id,usuario_regras_id"/>
+      <foreign-key name="fk_usuario_acesso_has_usuario_regras_usuario_acesso1" columns="usuario_acesso_id" ref-table="usuario_acesso" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <foreign-key name="fk_usuario_acesso_has_usuario_regras_usuario_regras1" columns="usuario_regras_id" ref-table="usuario_regras" ref-schema="" ref-catalog="reservasModel" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <index name="fk_usuario_acesso_has_usuario_regras_usuario_acesso1_idx" unique="false" columns="usuario_acesso_id"/>
+      <index name="fk_usuario_acesso_has_usuario_regras_usuario_regras1_idx" unique="false" columns="usuario_regras_id"/>
+    </table>
+    <table name="usuario_regras" schema="" catalog="reservasModel" type="TABLE">
+      <column name="id" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4" autoIncrement="true"/>
+      <column name="regra" sqlType="VARCHAR" precision="45" scale="0" nullable="false" jdbcType="12"/>
+      <column name="descricao" sqlType="VARCHAR" precision="300" scale="0" nullable="true" jdbcType="12"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <exported-key name="fk_usuario_usuario_regras1" table="usuario" schema="" catalog="reservasModel" columns="usuario_regras_id"/>
+      <exported-key name="fk_usuario_acesso_has_usuario_regras_usuario_regras1" table="usuario_acesso_regras" schema="" catalog="reservasModel" columns="usuario_regras_id"/>
+    </table>
+  </data-source>
+</component>

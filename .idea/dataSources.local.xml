@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal">
+    <data-source name="reservas" uuid="bf50d9c3-f9b2-49d2-9bc4-5fd3922c2a66">
+      <secret-storage>master_key</secret-storage>
+      <user-name>root</user-name>
+      <schema-pattern>reservasModel.*</schema-pattern>
+      <default-schemas>reservasModel.*</default-schemas>
+    </data-source>
+  </component>
+</project>
