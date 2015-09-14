@@ -165,9 +165,11 @@ class Generator {
                 $primary_key = null;
                 $campos = self::describeTable($tabela[0]);
 
+                // criacao da classe
                 $php = "<?php\n";
                 $php .= "public class ".self::padronizaNome($tabela[0])."_model {\n\n";
 
+                // percorre os campos
                 if ($campos){
                     while ($campo = mysql_fetch_array($campos)){
                         $php .= "\tprivate \$".$campo['Field'].";\n";
@@ -180,6 +182,7 @@ class Generator {
                     }
                 }
 
+                // cria __construct
                 $php .= "\n";
                 $php .= "\tpublic function __construct(){\n";
                     $php .= "\t\t\$CI = & get_instance();\n";
@@ -194,6 +197,8 @@ class Generator {
                     }
                 $php .= "\t}\n\n";
 
+
+                // regras dos campos
                 $php .= "\tprivate static function regras(){\n";
                     $php .= "\t\treturn array(\n";
                     $php .= !is_null($primary_key) ? "\t\t\t'pk' => 'id',\n" : "";
@@ -215,6 +220,8 @@ class Generator {
                     $php .= "\t\t);\n";
                 $php .= "\t}\n\n";
 
+
+                // relacoes entre tabelas
                 if (count($forengkey)){
                     $php .= "\tprivate function relations(){\n";
                     $php .= "\t\treturn array(\n";
@@ -222,7 +229,21 @@ class Generator {
                         $php .= "\t\t\t'".self::padronizaNome(str_replace("_id","",$fk))."'=>".self::padronizaNome(str_replace("_id","",$fk), true)."_model::findByPk(\$this->".str_replace("_id","",$fk)."),\n";
                     }
                     $php .= "\t\t);\n";
-                    $php .= "\t}\n";
+                    $php .= "\t}\n\n";
+                }
+
+                // getTabela
+                $php .= "\tprivate static function getTabela(){\n";
+                    $php .= "\t\treturn '{$tabela[0]}';\n";
+                $php .= "\t}\n\n";
+
+                // getters e setters
+                foreach($campos as $campo){
+                    $php .= "\tpublic function {$campo['Field']}(\${$campo['Field']} = null){\n";
+                        $php .= "\t\tif (!is_null(\${$campo['Field']}))\n";
+                            $php .= "\t\t\t\$this->{$campo['Field']} = \${$campo['Field']};\n";
+                        $php .= "\t\treturn \$this->{$campo['Field']};\n";
+                    $php .= "\t}\n\n"
                 }
 
             }
