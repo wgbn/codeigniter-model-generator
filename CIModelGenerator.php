@@ -1,12 +1,12 @@
 <?php
-
+require_once('Conexao.php');
 /**
  * Created by PhpStorm.
  * User: walter
  * Date: 10/09/15
  * Time: 15:21
  */
-class Generator {
+class CIModelGenerator {
 
     private $host;
     private $user;
@@ -28,6 +28,10 @@ class Generator {
         $this->db = $db;
 
         self::conecta();
+    }
+
+    private function pre($pre){
+        echo "<pre>"; print_r($pre); echo "</pre>";
     }
 
     /**
@@ -88,14 +92,14 @@ class Generator {
 
     private function criaDiretorios(){
         if ($this->db){
-            if (!is_dir($this->db))
-                mkdir($this->db);
+            if (!is_dir(__DIR__.'/'.$this->db))
+                mkdir(__DIR__.'/'.$this->db);
 
-            if (!is_dir($this->db."/controllers"))
-                mkdir($this->db."/controllers");
+            if (!is_dir(__DIR__.'/'.$this->db."/controllers"))
+                mkdir(__DIR__.'/'.$this->db."/controllers");
 
-            if (!is_dir($this->db."/models"))
-                mkdir($this->db."/models");
+            if (!is_dir(__DIR__.'/'.$this->db."/models"))
+                mkdir(__DIR__.'/'.$this->db."/models");
 
             return true;
         }
@@ -104,18 +108,18 @@ class Generator {
 
     private function criaModelFile($nome, $conteudo){
         $nome = self::padronizaNome($nome, true);
-        if (($arq = fopen($this->db.'/models/'.$nome.'_model.php','w+')) !== false)
-            if (fwrite($file, $conteudo) !== false)
-                if (fclose($file) === true)
+        if (($arq = fopen(__DIR__.'/'.$this->db.'/models/'.$nome.'_model.php','w+')) !== false)
+            if (fwrite($arq, $conteudo) !== false)
+                if (fclose($arq) === true)
                     return true;
         return false;
     }
 
     private function criaControllerFile($nome, $conteudo){
         $nome = self::padronizaNome($nome, true);
-        if (($arq = fopen($this->db.'/controllers/'.$nome.'.php','w+')) !== false)
-            if (fwrite($file, $conteudo) !== false)
-                if (fclose($file) === true)
+        if (($arq = fopen(__DIR__.'/'.$this->db.'/controllers/'.$nome.'.php','w+')) !== false)
+            if (fwrite($arq, $conteudo) !== false)
+                if (fclose($arq) === true)
                     return true;
         return false;
     }
@@ -134,93 +138,122 @@ class Generator {
     }
 
     private function conecta(){
-        if ($this->host && $this->user && $this->pass && $this->db) {
-            $this->conn = mysql_connect($this->host, $this->user, $this->pass);
-            mysql_select_db($this->db, $this->conn);
-            return true;
-        }
-        return false;
+        $this->conn = Conexao::getInstance($this->host, $this->user, $this->pass, $this->db);
     }
 
     private function showTables(){
-        if ($this->conn) {
-            $sql = 'show tables';
-            return mysql_query($sql, $conn);
+        $sql = 'show tables';
+
+        try {
+            $conn = $this->conn->prepare($sql);
+            $conn->execute();
+
+            if ($res = $conn->fetchAll(PDO::FETCH_COLUMN))
+                return $res;
+        } catch (Exception $e){
+            self::pre($e->getMessage());
         }
+
         return false;
     }
 
     private function describeTable($tabela){
-        if ($this->conn){
-            $sql = "desc $tabela";
-            return mysql_query($sql, $this->conn);
+        $sql = "describe $tabela";
+
+        try {
+            $conn = $this->conn->prepare($sql);
+            $conn->execute();
+
+            if ($res = $conn->fetchAll(PDO::FETCH_ASSOC))
+                return $res;
+        } catch (Exception $e){
+            self::pre($e->getMessage());
         }
 
+        return false;
     }
 
     public function criaModels(){
         self::criaDiretorios();
 
         if ($tabelas = self::showTables()){
-            while ($tabela = mysql_fetch_row($tabelas)){
+            self::pre("showTables()");
+            foreach ($tabelas as $tabela){
                 $forengkey = array();
-                $primary_key = null;
-                $campos = self::describeTable($tabela[0]);
+                $primary_key = array();
+                $campos = self::describeTable($tabela);
 
                 // criacao da classe
                 $php = "<?php\n";
-                $php .= "public class ".self::padronizaNome($tabela[0])."_model {\n\n";
+                $php .= "public class ".self::padronizaNome($tabela, true)."_model {\n\n";
 
                 // percorre os campos
                 if ($campos){
-                    while ($campo = mysql_fetch_array($campos)){
+                    foreach ($campos as $campo){
                         $php .= "\tprivate \$".$campo['Field'].";\n";
                         if ($campo['Key'] == 'PRI')
-                            $primary_key = $campo['Field'];
+                            $primary_key[] = $campo['Field'];
                         if ($campo['Key'] == 'MUL')
-                            $forengkey[] $campo['Field'];
-
-
+                            $forengkey[] = $campo['Field'];
                     }
                 }
 
-                // cria __construct
                 $php .= "\n";
-                $php .= "\tpublic function __construct(){\n";
-                    $php .= "\t\t\$CI = & get_instance();\n";
-                    $fks = '';
-                    if (count($forengkey)){
+
+                // cria __construct
+                if (count($forengkey)) {
+                    $php .= "\n";
+                    $php .= "\tpublic function __construct(){\n";
+                        $php .= "\t\t\$CI = & get_instance();\n";
+                        $fks = '';
+                        $mls = '';
+
                         $php .= "\t\t\$CI->load->model(array(";
-                        foreach($forengkey as $fk){
-                            $php .= "'".self::padronizaNome(str_replace("_id","",$fk), true)."_model,'";
+                        foreach ($forengkey as $fk) {
+                            $mls .= "'" . self::padronizaNome(str_replace("_id", "", $fk), true) . "_model',";
                             $fks .= "'$fk',";
                         }
+                        $php .= rtrim($mls,",");
                         $php .= "));\n";
-                    }
-                $php .= "\t}\n\n";
+
+                    $php .= "\t}\n\n";
+                }
 
 
                 // regras dos campos
-                $php .= "\tprivate static function regras(){\n";
+                if (count($campos)) {
+                    $php .= "\tprivate static function regras(){\n";
                     $php .= "\t\treturn array(\n";
-                    $php .= !is_null($primary_key) ? "\t\t\t'pk' => 'id',\n" : "";
-                        $req = '';
-                        $num = '';
-                        foreach($campos as $campo){
-                            if ($campo['Null'] == 'No')
-                                $req .= "'{$campo['Field']}',";
-                            if (substr($campo['Type'],0,3) == 'int' || substr($campo['Type'],0,3) == 'flo' || substr($campo['Type'],0,3) == 'dou' || substr($campo['Type'],0,3) == 'dec' || substr($campo['Type'],0,3) == 'num')
-                                $num .= "'{$campo['Field']}',";
-                        }
-                        if ($req != '')
-                            $php .= "\t\t\t'requerido' => array($req),\n";
-                        if ($num != '')
-                            $php .= "\t\t\t'numero' => array($num),\n";
-                        if (count($forengkey)){
-                            $php .= "\t\t\t'fk' => array($fks),\n";
-                        }
+                    $ppk = '';
+
+                    if (count($primary_key) == 1){
+                        $php .=  "\t\t\t'pk' => '{$primary_key[0]}',\n";
+                    }
+                    if (count($primary_key) > 1){
+                        $php .=  "\t\t\t'pk' => array(";
+                        foreach($primary_key as $pk)
+                            $ppk .= "'$pk',";
+                        $php .= rtrim($ppk, ",")."),\n";
+                    }
+
+                    $req = '';
+                    $num = '';
+                    foreach ($campos as $campo) {
+                        if ($campo['Null'] == 'No')
+                            $req .= "'{$campo['Field']}',";
+                        if (substr($campo['Type'], 0, 3) == 'int' || substr($campo['Type'], 0, 3) == 'flo' || substr($campo['Type'], 0, 3) == 'dou' || substr($campo['Type'], 0, 3) == 'dec' || substr($campo['Type'], 0, 3) == 'num' || substr($campo['Type'], 0, 3) == 'bit')
+                            $num .= "'{$campo['Field']}',";
+                    }
+                    if ($req != '')
+                        $php .= "\t\t\t'requerido' => array($req),\n";
+                    if ($num != '')
+                        $php .= "\t\t\t'numero' => array($num),\n";
+                    if (count($forengkey)) {
+                        $php .= "\t\t\t'fk' => array($fks),\n";
+                    }
                     $php .= "\t\t);\n";
-                $php .= "\t}\n\n";
+                    $php .= "\t}\n\n";
+                }
 
 
                 // relacoes entre tabelas
@@ -228,7 +261,7 @@ class Generator {
                     $php .= "\tprivate function relations(){\n";
                     $php .= "\t\treturn array(\n";
                     foreach($forengkey as $fk){
-                        $php .= "\t\t\t'".self::padronizaNome(str_replace("_id","",$fk))."'=>".self::padronizaNome(str_replace("_id","",$fk), true)."_model::findByPk(\$this->".str_replace("_id","",$fk)."),\n";
+                        $php .= "\t\t\t'".self::padronizaNome(str_replace("_id","",$fk))."'=>".self::padronizaNome(str_replace("_id","",$fk), true)."_model::findByPk(\$this->$fk),\n";
                     }
                     $php .= "\t\t);\n";
                     $php .= "\t}\n\n";
@@ -236,7 +269,7 @@ class Generator {
 
                 // getTabela
                 $php .= "\tprivate static function getTabela(){\n";
-                    $php .= "\t\treturn '{$tabela[0]}';\n";
+                    $php .= "\t\treturn '$tabela';\n";
                 $php .= "\t}\n\n";
 
                 // getters e setters
@@ -245,12 +278,12 @@ class Generator {
                         $php .= "\t\tif (!is_null(\${$campo['Field']}))\n";
                             $php .= "\t\t\t\$this->{$campo['Field']} = \${$campo['Field']};\n";
                         $php .= "\t\treturn \$this->{$campo['Field']};\n";
-                    $php .= "\t}\n\n"
+                    $php .= "\t}\n\n";
                 }
 
                 // getters das relacoes
                 if (count($forengkey)){
-                    $forengkey($forengkey as $fk){
+                    foreach($forengkey as $fk){
                         $php .= "\tpublic function ".self::padronizaNome(str_replace("_id","",$fk))."(){\n";
                             $php .= "\t\t\$relations = self::relations();\n";
                             $php .= "\t\treturn \$relations['".self::padronizaNome(str_replace("_id","",$fk))."'];\n";
@@ -298,7 +331,7 @@ class Generator {
                     $php .= "\t\t\$result = array();\n";
 
                     $php .= "\t\tforeach(\$res as \$k=>\$r){\n";
-                        $php .= "\t\t\t\$result[\$k] = new ".self::padronizaNome($tabela[0], true)."_model;\n";
+                        $php .= "\t\t\t\$result[\$k] = new ".self::padronizaNome($tabela, true)."_model;\n";
                         $php .= "\t\t\t\$result[\$k]->setAttrs(\$r);\n";
                     $php .= "\t\t}\n";
 
@@ -309,7 +342,7 @@ class Generator {
                 $php .= "\tpublic static function find(\$condicoes = null){\n";
                     $php .= "\t\t\$res = Modelo::instance()->find(self::getTabela(), \$condicoes);\n";
 
-                    $php .= "\t\t\$obj = new ".self::padronizaNome($tabela[0], true)."_model;\n";
+                    $php .= "\t\t\$obj = new ".self::padronizaNome($tabela, true)."_model;\n";
                     $php .= "\t\t\$obj->setAttrs(\$res[0]);\n";
 
                     $php .= "\t\treturn \$obj;\n";
@@ -320,7 +353,7 @@ class Generator {
                     $php .= "\t\t\$regras = self::regras();\n";
                     $php .= "\t\tif (\$this->{\$regras['pk']}) {\n";
                         $php .= "\t\t\t\$row = Modelo::instance()->findByPk(self::getTabela(), array(\$regras['pk'], \$pk));\n";
-                        $php .= "\t\t\t\$obj = new ".self::padronizaNome($tabela[0], true)."_model;\n";
+                        $php .= "\t\t\t\$obj = new ".self::padronizaNome($tabela, true)."_model;\n";
                         $php .= "\t\t\t\$obj->setAttrs(\$row);\n";
                         $php .= "\t\t\treturn \$obj;\n";
                     $php .= "\t\t}\n";
@@ -348,8 +381,8 @@ class Generator {
                     $php .= "\t\tforeach(\$attrs as \$key=>\$val){\n";
                         $php .= "\t\t\tif (array_key_exists(\$key, \$params)) {\n";
                             $php .= "\t\t\t\t\$this->{\$key} = \$val;\n";
-                            $php .= "\t\t\t\tif (\$key == 'senha')\n";
-                                $php .= "\t\t\t\t\tself::senha(\$val);\n";
+                            //$php .= "\t\t\t\tif (\$key == 'senha')\n";
+                                //$php .= "\t\t\t\t\tself::senha(\$val);\n";
                         $php .= "\t\t\t}\n";
                     $php .= "\t\t}\n";
                 $php .= "\t}\n\n";
@@ -391,9 +424,18 @@ class Generator {
 
                 $php .= "}";
 
-                self::criaModelFile(self::padronizaNome($tabela[0]), $php);
+                self::criaModelFile($tabela, $php);
             }
+        } else {
+            self::pre("showTables() false");
         }
-        return false;
+        //return false;
     }
+
+    /*public function teste(){
+        foreach(self::showTables() as $table) {
+            self::pre($table);
+            self::pre(self::describeTable($table));
+        }
+    }*/
 }
