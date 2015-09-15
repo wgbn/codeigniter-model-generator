@@ -13,7 +13,6 @@ class Generator {
     private $pass;
     private $db;
     private $conn;
-    private $campos;
 
     /**
      * Generator constructor.
@@ -22,12 +21,13 @@ class Generator {
      * @param $pass
      * @param $db
      */
-    public function __construct($host, $user, $pass, $db)
-    {
+    public function __construct($host, $user, $pass, $db){
         $this->host = $host;
         $this->user = $user;
         $this->pass = $pass;
         $this->db = $db;
+
+        self::conecta();
     }
 
     /**
@@ -159,6 +159,8 @@ class Generator {
     }
 
     public function criaModels(){
+        self::criaDiretorios();
+
         if ($tabelas = self::showTables()){
             while ($tabela = mysql_fetch_row($tabelas)){
                 $forengkey = array();
@@ -190,7 +192,7 @@ class Generator {
                     if (count($forengkey)){
                         $php .= "\t\t\$CI->load->model(array(";
                         foreach($forengkey as $fk){
-                            $php .= "'".self::padronizaNome($fk, true)."_model,'";
+                            $php .= "'".self::padronizaNome(str_replace("_id","",$fk), true)."_model,'";
                             $fks .= "'$fk',";
                         }
                         $php .= "));\n";
@@ -239,13 +241,157 @@ class Generator {
 
                 // getters e setters
                 foreach($campos as $campo){
-                    $php .= "\tpublic function {$campo['Field']}(\${$campo['Field']} = null){\n";
+                    $php .= "\tpublic function ".self::padronizaNome($campo['Field'])."(\${$campo['Field']} = null){\n";
                         $php .= "\t\tif (!is_null(\${$campo['Field']}))\n";
                             $php .= "\t\t\t\$this->{$campo['Field']} = \${$campo['Field']};\n";
                         $php .= "\t\treturn \$this->{$campo['Field']};\n";
                     $php .= "\t}\n\n"
                 }
 
+                // getters das relacoes
+                if (count($forengkey)){
+                    $forengkey($forengkey as $fk){
+                        $php .= "\tpublic function ".self::padronizaNome(str_replace("_id","",$fk))."(){\n";
+                            $php .= "\t\t\$relations = self::relations();\n";
+                            $php .= "\t\treturn \$relations['".self::padronizaNome(str_replace("_id","",$fk))."'];\n";
+                        $php .= "\t}\n\n";
+                    }
+                }
+
+                // metodo save
+                $php .= "\tpublic function save(){\n";
+                    $php .= "\t\t\$return = false;\n";
+                    $php .= "\t\t\$regras = self::regras();\n";
+
+                    $php .= "\t\tif (self::validaCampos())\n";
+                        $php .= "\t\t\tif (\$this->{\$regras['pk']})\n";
+                            $php .= "\t\t\t\t\$return = self::update();\n";
+                        $php .= "\t\t\telse\n";
+                            $php .= "\t\t\t\t\$return = self::insert();\n";
+
+                    $php .= "\t\treturn \$return;\n";
+                $php .= "\t}\n\n";
+
+                // metodo insert
+                $php .= "\tprivate function insert(){\n";
+                    $php .= "\t\t\$regras = self::regras();\n";
+                    $php .= "\t\treturn Modelo::instance()->insert(self::getTabela(), self::getAttrs(true), isset(\$regras['pk']));\n";
+                $php .= "\t}\n\n";
+
+                // matodo update
+                $php .= "\tpublic function update(){\n";
+                    $php .= "\t\t\$regras = self::regras();\n";
+                    $php .= "\t\tif (\$this->{\$regras['pk']}) {\n";
+                        $php .= "\t\t\treturn Modelo::instance()->update(self::getTabela(), array(\$regras['pk'], \$this->{\$regras['pk']}), self::getAttrs(true));\n";
+                    $php .= "\t\t}\n";
+                    $php .= "\t\treturn false;\n";
+                $php .= "\t}\n\n";
+
+                // metodo updateAll
+                $php .= "\tpublic static function updateAll(\$condicao = null, \$dados = null){\n";
+                    $php .= "\t\treturn Modelo::instance()->updateAll(self::getTabela(), \$condicao, \$dados);\n";
+                $php .= "\t}\n\n";
+
+                // metodo findAll
+                $php .= "\tpublic static function findAll(\$condicoes = null, \$limit = 100, \$offset = 0){\n";
+                    $php .= "\t\t\$res = Modelo::instance()->findAll(self::getTabela(), \$condicoes, \$limit, \$offset);\n";
+                    $php .= "\t\t\$result = array();\n";
+
+                    $php .= "\t\tforeach(\$res as \$k=>\$r){\n";
+                        $php .= "\t\t\t\$result[\$k] = new ".self::padronizaNome($tabela[0], true)."_model;\n";
+                        $php .= "\t\t\t\$result[\$k]->setAttrs(\$r);\n";
+                    $php .= "\t\t}\n";
+
+                    $php .= "\t\treturn \$result;\n";
+                $php .= "\t}\n\n";
+
+                // metodo find
+                $php .= "\tpublic static function find(\$condicoes = null){\n";
+                    $php .= "\t\t\$res = Modelo::instance()->find(self::getTabela(), \$condicoes);\n";
+
+                    $php .= "\t\t\$obj = new ".self::padronizaNome($tabela[0], true)."_model;\n";
+                    $php .= "\t\t\$obj->setAttrs(\$res[0]);\n";
+
+                    $php .= "\t\treturn \$obj;\n";
+                $php .= "\t}\n\n";
+
+                // metodo findByPk
+                $php .= "\tpublic static function findByPk(\$pk){\n";
+                    $php .= "\t\t\$regras = self::regras();\n";
+                    $php .= "\t\tif (\$this->{\$regras['pk']}) {\n";
+                        $php .= "\t\t\t\$row = Modelo::instance()->findByPk(self::getTabela(), array(\$regras['pk'], \$pk));\n";
+                        $php .= "\t\t\t\$obj = new ".self::padronizaNome($tabela[0], true)."_model;\n";
+                        $php .= "\t\t\t\$obj->setAttrs(\$row);\n";
+                        $php .= "\t\t\treturn \$obj;\n";
+                    $php .= "\t\t}\n";
+                    $php .= "\t\treturn false;\n";
+                $php .= "\t}\n\n";
+
+                // metodo delete
+                $php .= "\tpublic function delete(){\n";
+                    $php .= "\t\t\$regras = self::regras();\n";
+                    $php .= "\t\tif (\$this->{\$regras['pk']}){\n";
+                        $php .= "\t\t\treturn Modelo::instance()->delete(self::getTabela(), array(\$regras['pk'], \$this->{\$regras['pk']}));\n";
+                    $php .= "\t\t}\n";
+                    $php .= "\t\treturn false;\n";
+                $php .= "\t}\n\n";
+
+                // metodo deleteAll
+                $php .= "\tpublic static function deleteAll(\$condicoes = null){\n";
+                    $php .= "\t\treturn Modelo::instance()->deleteAll(self::getTabela(), \$condicoes);\n";
+                $php .= "\t}\n\n";
+
+                // metodo setAttrs
+                $php .= "\tpublic function setAttrs(\$attrs){\n";
+                    $php .= "\t\t\$params = get_class_vars(__CLASS__);\n";
+
+                    $php .= "\t\tforeach(\$attrs as \$key=>\$val){\n";
+                        $php .= "\t\t\tif (array_key_exists(\$key, \$params)) {\n";
+                            $php .= "\t\t\t\t\$this->{\$key} = \$val;\n";
+                            $php .= "\t\t\t\tif (\$key == 'senha')\n";
+                                $php .= "\t\t\t\t\tself::senha(\$val);\n";
+                        $php .= "\t\t\t}\n";
+                    $php .= "\t\t}\n";
+                $php .= "\t}\n\n";
+
+                // metodo getAttrs
+                $php .= "\tpublic function getAttrs(\$nulos = false){\n";
+                    $php .= "\t\t\$params = array();\n";
+
+                    $php .= "\t\tforeach(get_class_vars(__CLASS__) as \$key=>\$val){\n";
+                        $php .= "\t\t\t\$params[\$key] = \$this->{\$key};\n";
+                    $php .= "\t\t}\n";
+
+                    $php .= "\t\tif (\$nulos)\n";
+                        $php .= "\t\t\tforeach(get_class_vars(__CLASS__) as \$key=>\$val)\n";
+                            $php .= "\t\t\t\tif (!\$this->{\$key})\n";
+                                $php .= "\t\t\t\t\tunset(\$params[\$key]);\n";
+
+                    $php .= "\t\treturn \$params;\n";
+                $php .= "\t}\n\n";
+
+                // metodo valida campos
+                $php .= "\tpublic function validaCampos(){\n";
+                    $php .= "\t\t\$ok = true;\n";
+                    $php .= "\t\t\$regras = self::regras();\n";
+
+                    $php .= "\t\tforeach(self::getAttrs() as \$key=>\$val){\n";
+                        $php .= "\t\t\tif (isset(\$regras['requerido']))\n";
+                            $php .= "\t\t\t\tif (in_array(\$key, \$regras['requerido']) && !\$val)\n";
+                                $php .= "\t\t\t\t\t\$ok = false;\n";
+
+                        $php .= "\t\t\tif (isset(\$regras['numero']))\n";
+                            $php .= "\t\t\t\tif (in_array(\$key, \$regras['numero']) && !is_numeric(\$val))\n";
+                                $php .= "\t\t\t\t\t\$ok = false;\n";
+
+                    $php .= "\t\t}\n";
+
+                    $php .= "\t\treturn \$ok;\n";
+                $php .= "\t}\n\n";
+
+                $php .= "}";
+
+                self::criaModelFile(self::padronizaNome($tabela[0]), $php);
             }
         }
         return false;
